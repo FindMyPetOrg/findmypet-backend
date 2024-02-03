@@ -28,4 +28,8 @@ Route::group([
         ->name('users.forceDelete');
     Route::patch('users/restore/{user}', 'UserProfileController@restore')
         ->name('users.restore');
+    Route::patch('users/profilePhoto/{user}', 'UserProfileController@profilePhoto')
+        ->name('users.profilePhoto');
+    Route::delete('users/deleteProfilePhoto/{user}', 'UserProfileController@deleteProfilePhoto')
+        ->name('users.deleteProfilePhoto');
 });
