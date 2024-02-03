@@ -17,3 +17,15 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::group([
+    'as' => 'api.',
+    'namespace' => 'App\Http\Controllers\Api',
+    'middleware' => ['auth:sanctum']
+], function () {
+    Route::apiResource('users', 'UserProfileController')->except('index', 'store');
+    Route::delete('users/forceDelete/{user}', 'UserProfileController@forceDelete')
+        ->name('users.forceDelete');
+    Route::patch('users/restore/{user}', 'UserProfileController@restore')
+        ->name('users.restore');
+});
