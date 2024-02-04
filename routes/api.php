@@ -32,4 +32,14 @@ Route::group([
         ->name('users.profilePhoto');
     Route::delete('users/deleteProfilePhoto/{user}', 'UserProfileController@deleteProfilePhoto')
         ->name('users.deleteProfilePhoto');
+
+    Route::apiResource('posts', 'PostController');
+    Route::delete('posts/forceDelete/{post}', 'PostController@forceDelete')
+        ->name('posts.forceDelete');
+    Route::patch('posts/restore/{post}', 'PostController@restore')
+        ->name('posts.restore');
+    Route::patch('posts/changePostPhotos/{post}', 'PostController@changePostPhoto')
+        ->name('posts.changePostPhotos');
+    Route::patch('posts/changeLikePost/{post}', 'PostController@changeLikePost')
+        ->name('posts.changeLikePost');
 });
