@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -42,4 +43,71 @@ Route::group([
         ->name('posts.changePostPhotos');
     Route::patch('posts/changeLikePost/{post}', 'PostController@changeLikePost')
         ->name('posts.changeLikePost');
+
+    Route::get('direct', function (Request $request) {
+        try {
+            $PER_PAGE_ENTRIES = 10;
+            $directs = \App\Models\Direct::with('sender')
+                ->select('sender_id', 'text', 'seen')
+                ->selectRaw('MAX(id) as last_message_id')
+                ->where('receiver_id', $request->user()->id)
+                ->groupBy('sender_id', 'text', 'seen')
+                ->orderByDesc('last_message_id')
+                ->paginate($PER_PAGE_ENTRIES);
+        } catch (\Exception $exception) {
+            \Illuminate\Support\Facades\Log::error(
+                "[Direct Message Socket] Couldn\'t fetch messages from database {$exception->getMessage()}");
+
+            return response()->noContent()->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+        return response()->json(['data' => $directs]);
+    })->name('direct.show');
+    Route::post('direct', function (\App\Http\Requests\DirectMessageRequest $directMessageRequest) {
+        try {
+            $direct = \App\Models\Direct::create($directMessageRequest->only('sender_id', 'receiver_id', 'text'));
+        } catch (\Exception $exception) {
+            \Illuminate\Support\Facades\Log::error(
+                "[Direct Message Socket] Couldn\'t save messages to database {$exception->getMessage()}");
+
+            return response()->noContent()->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        broadcast(new \App\Events\NewChatDirectMessage(
+            $directMessageRequest->sender_id, $directMessageRequest->receiver_id, $direct->load('sender')))
+            ->toOthers();
+        return response()->json(['message' => $direct->load('sender')]);
+    })->name('direct.post');
+    Route::get('direct/{user}', function (Request $request, \App\Models\User $user) {
+        try {
+            $directs = \App\Models\Direct::with('sender')->where(function($query) use ($request, $user) {
+                $query->where('sender_id', $request->user()->id)
+                    ->where('receiver_id', $user->id);
+            })->orWhere(function($query) use ($request, $user) {
+                $query->where('receiver_id', $request->user()->id)
+                    ->where('sender_id', $user->id);
+            })
+            ->get();
+        } catch (\Exception $exception) {
+            \Illuminate\Support\Facades\Log::error(
+                "[Direct Message Socket] Couldn\'t fetch messages from database {$exception->getMessage()}");
+
+            return response()->noContent()->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return response()->json(['messages' => $directs]);
+    })->name('direct.user.show');
+    Route::patch('direct/{user}', function (Request $request, \App\Models\User $user) {
+        try {
+            $directs = \App\Models\Direct::where('receiver_id', $request->user()->id)
+                ->where('sender_id', $user->id)
+                ->update(['seen' => true]);
+        } catch (\Exception $exception) {
+            \Illuminate\Support\Facades\Log::error(
+                "[Direct Message Socket] Couldn\'t update messages from database {$exception->getMessage()}");
+
+            return response()->noContent()->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return response()->noContent()->setStatusCode(Response::HTTP_OK);
+    })->name('direct.user.update');
 });

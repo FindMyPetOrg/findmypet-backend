@@ -54,4 +54,9 @@ class User extends Authenticatable
         return $this->belongsToMany(Post::class)
             ->as('posts');
     }
+
+//    public function receivedMessages()
+//    {
+//        return $this->hasMany(Direct::class, 'id', 'receiver_id');
+//    }
 }
