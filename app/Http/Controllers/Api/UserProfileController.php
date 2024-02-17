@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class UserProfileController extends Controller
@@ -23,7 +24,7 @@ class UserProfileController extends Controller
                 'is_admin' => $updateUserRequest->post('is_admin', $user->is_admin),
                 'is_verified' => $updateUserRequest->post('is_verified', $user->is_verified),
                 'address' => $updateUserRequest->post('address', $user->address),
-                'phone' => $updateUserRequest->post('address', $user->phone),
+                'phone' => $updateUserRequest->post('phone', $user->phone),
                 'description' => $updateUserRequest->post('description', $user->description),
             ]);
         }
@@ -101,7 +102,7 @@ class UserProfileController extends Controller
         ])->setStatusCode(Response::HTTP_OK);
     }
 
-    public function restore(User $user)
+    public function restore(int $user)
     {
         try
         {
@@ -111,7 +112,7 @@ class UserProfileController extends Controller
                 throw new \Exception("You are not an administrator.");
             }
 
-            $user->restore();
+            User::withTrashed()->find($user)->restore();
         }
         catch (\Exception $exception)
         {
@@ -127,13 +128,13 @@ class UserProfileController extends Controller
         ])->setStatusCode(Response::HTTP_OK);
     }
 
-    public function profilePhoto(User $user, UpdateUserPhotoRequest $updateUserPhotoRequest)
+    public function profilePhoto(UpdateUserPhotoRequest $updateUserPhotoRequest, User $user)
     {
         try
         {
             $user->avatar = bin2hex(random_bytes(16)) .
             "profilePhoto_" . Str::slug($user->name) .
-            ".{$updateUserPhotoRequest->avatar->clientExtension()}";
+            ".{$updateUserPhotoRequest->file->clientExtension()}";
 
             $user->save();
         }
@@ -156,7 +157,7 @@ class UserProfileController extends Controller
         try
         {
             $authenticated_user = Auth::user();
-            if (! $authenticated_user->is_admin && $user->id != $authenticated_user->id)
+            if (!($authenticated_user->is_admin || $user->id == $authenticated_user->id))
             {
                 throw new \Exception("You don't have permission to do this action.");
             }
