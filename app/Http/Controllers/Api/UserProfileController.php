@@ -76,7 +76,7 @@ class UserProfileController extends Controller
         ])->setStatusCode(Response::HTTP_OK);
     }
 
-    public function forceDelete(User $user): \Illuminate\Http\JsonResponse
+    public function forceDelete(int $user): \Illuminate\Http\JsonResponse
     {
         try
         {
@@ -86,6 +86,7 @@ class UserProfileController extends Controller
                 throw new \Exception("You are not an administrator.");
             }
 
+            $user = User::withTrashed()->find($user);
             $user->forceDelete();
         }
         catch (\Exception $exception)
