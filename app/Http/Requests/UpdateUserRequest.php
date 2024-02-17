@@ -24,14 +24,16 @@ class UpdateUserRequest extends FormRequest
      */
     public function rules(): array
     {
+        $user = $this->route()->parameter('user');
+
         return [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email|max:255',
+            'email' => 'required|email|unique:users,email,'. $user->id .'|max:255',
             'nickname' => 'nullable|string|max:255',
             'is_admin' => 'nullable|boolean',
             'is_verified' => 'nullable|boolean',
             'address' => 'nullable|regex:/^[a-zA-Z\d\s\-\,\#\.\+]+$/|min:10|max:255',
-            'phone' => 'nullable|regex:/^$|^\(?\d{2,4}\)?[\d\s-]+$/|min:3|max:16',
+            'phone' => 'nullable|min:3|max:16',
             'description' => 'nullable|max:255'
         ];
     }

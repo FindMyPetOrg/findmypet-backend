@@ -25,6 +25,11 @@ class User extends Authenticatable
         'nickname',
         'socialite_id',
         'avatar',
+        'phone',
+        'address',
+        'description',
+        'is_admin',
+        'is_verified',
         'socialite_token',
         'email_verified_at'
     ];
@@ -55,8 +60,10 @@ class User extends Authenticatable
             ->as('posts');
     }
 
-//    public function receivedMessages()
-//    {
-//        return $this->hasMany(Direct::class, 'id', 'receiver_id');
-//    }
+    protected static function booted()
+    {
+        static::addGlobalScope('trashed', function ($builder) {
+            $builder->withTrashed();
+        });
+    }
 }

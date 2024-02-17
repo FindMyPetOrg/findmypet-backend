@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class UpdateUserPhotoRequest extends FormRequest
 {
@@ -14,7 +15,7 @@ class UpdateUserPhotoRequest extends FormRequest
     {
         $current_authenticated_user = Auth::user();
 
-        return $current_authenticated_user->is_admin || $this->route()->parameter('user') == $current_authenticated_user->id;
+        return $current_authenticated_user->is_admin || $this->route()->parameter('user')->id == $current_authenticated_user->id;
     }
 
     /**
@@ -25,7 +26,7 @@ class UpdateUserPhotoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'avatar' => 'required|image|min:128|max:4096'
+            'file' => 'required|image|mimes:jpeg,png,jpg,gif|max:4096'
         ];
     }
 }

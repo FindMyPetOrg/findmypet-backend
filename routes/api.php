@@ -19,6 +19,10 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::middleware(['auth:sanctum'])->get('/user/{user}', function (Request $request, int $user) {
+    return \App\Models\User::withTrashed()->where('id', $user)->get()[0];
+});
+
 Route::group([
     'as' => 'api.',
     'namespace' => 'App\Http\Controllers\Api',
@@ -31,7 +35,7 @@ Route::group([
         ->name('users.restore');
     Route::patch('users/profilePhoto/{user}', 'UserProfileController@profilePhoto')
         ->name('users.profilePhoto');
-    Route::delete('users/deleteProfilePhoto/{user}', 'UserProfileController@deleteProfilePhoto')
+    Route::delete('users/deleteProfilePhoto/{user}', 'UserProfileController@destroyProfilePhoto')
         ->name('users.deleteProfilePhoto');
 
     Route::apiResource('posts', 'PostController');
@@ -64,6 +68,7 @@ Route::group([
     })->name('direct.show');
     Route::post('direct', function (\App\Http\Requests\DirectMessageRequest $directMessageRequest) {
         try {
+            \App\Models\User::withoutTrashed()->findOrFail($directMessageRequest->receiver_id);
             $direct = \App\Models\Direct::create($directMessageRequest->only('sender_id', 'receiver_id', 'text'));
         } catch (\Exception $exception) {
             \Illuminate\Support\Facades\Log::error(
@@ -77,8 +82,9 @@ Route::group([
             ->toOthers();
         return response()->json(['message' => $direct->load('sender')]);
     })->name('direct.post');
-    Route::get('direct/{user}', function (Request $request, \App\Models\User $user) {
+    Route::get('direct/{user}', function (Request $request, int $user) {
         try {
+            $user = \App\Models\User::withTrashed()->where('id', $user)->get()[0];
             $directs = \App\Models\Direct::with('sender')->where(function($query) use ($request, $user) {
                 $query->where('sender_id', $request->user()->id)
                     ->where('receiver_id', $user->id);
