@@ -23,6 +23,18 @@ Route::middleware(['auth:sanctum'])->get('/user/{user}', function (Request $requ
     return \App\Models\User::withTrashed()->where('id', $user)->get()[0];
 });
 
+Route::middleware(['auth:sanctum'])->post('/user/search', function (\App\Http\Requests\UserSearchRequest $request) {
+    $PER_SEARCH_MAX_RESULTS = env('SEARCH_MAX_RESULTS', 10);
+
+    return \App\Models\User::when($request->user()->is_admin, function ($query) {
+        $query->withTrashed();
+    })->where('name', 'like', "%{$request->search}%")->limit($PER_SEARCH_MAX_RESULTS)->get();
+});
+
+Route::middleware(['auth:sanctum'])->post('/post/search', function (Request $request) {
+
+});
+
 Route::group([
     'as' => 'api.',
     'namespace' => 'App\Http\Controllers\Api',
