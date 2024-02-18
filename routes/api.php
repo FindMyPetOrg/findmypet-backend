@@ -32,7 +32,11 @@ Route::middleware(['auth:sanctum'])->post('/user/search', function (\App\Http\Re
 });
 
 Route::middleware(['auth:sanctum'])->post('/post/search', function (Request $request) {
+    $PER_SEARCH_MAX_RESULTS = env('SEARCH_MAX_RESULTS', 10);
 
+    return \App\Models\Post::where('title', 'like', "%{$request->search}%")
+        ->limit($PER_SEARCH_MAX_RESULTS)
+        ->get();
 });
 
 Route::group([
