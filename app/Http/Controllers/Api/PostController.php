@@ -9,6 +9,7 @@ use App\Models\Post;
 use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class PostController extends Controller
@@ -17,7 +18,7 @@ class PostController extends Controller
     {
         try
         {
-            $posts = Post::withTrashed()->paginate();
+            $posts = Post::all();
         }
         catch (\Exception $exception)
         {
@@ -63,12 +64,22 @@ class PostController extends Controller
         ])->setStatusCode(Response::HTTP_OK);
     }
 
-    public function create(PostRequest $postRequest)
+    public function store(PostRequest $postRequest)
     {
         try
         {
             $post = Post::create(
-                $postRequest->only('user_id', 'lat', 'lng', 'title', 'description', 'reward', 'type', 'tags')
+                [
+                    'user_id' => auth()->id(),
+                    'lat' => $postRequest->lat,
+                    'lng' => $postRequest->lang,
+                    'title' => $postRequest->title,
+                    'description' => $postRequest->description,
+                    'reward' => $postRequest->reward,
+                    'type' => $postRequest->type,
+                    'tags' => json_encode($postRequest->tags),
+                    'images' => []
+                ]
             );
         }
         catch (\Exception $exception)
@@ -81,7 +92,7 @@ class PostController extends Controller
 
         return response()->json([
             'result' => 'success',
-            'data' => $post
+            'data' => []
         ])->setStatusCode(Response::HTTP_OK);
     }
 

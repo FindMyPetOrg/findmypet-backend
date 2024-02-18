@@ -15,9 +15,10 @@ class Post extends Model
         'user_id', 'title', 'description', 'lat', 'lng', 'reward', 'type', 'images', 'tags'
     ];
 
-    protected $appends = [
+    protected $with = [
         'user'
     ];
+
 
     protected $casts = [
         'tags' => 'array',
@@ -26,11 +27,5 @@ class Post extends Model
 
     public function user(): BelongsTo {
         return $this->belongsTo(User::class);
-    }
-
-    public function users()
-    {
-        return $this->belongsToMany(User::class)
-            ->as('users');
     }
 }
