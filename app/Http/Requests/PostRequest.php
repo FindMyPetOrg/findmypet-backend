@@ -23,15 +23,16 @@ class PostRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'required|exists:users,id',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'lat' => 'required|numeric',
-            'lng' => 'required|numeric',
+            'lang' => 'required|numeric',
             'reward' => 'nullable|numeric',
             'type' => 'required|in:REQUEST,FOUND',
             'tags' => 'nullable|array',
-            'tags.*' => 'string|alpha_dash|max:64'
+            'tags.*' => 'string|max:64',
+            'images' => 'required',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:4096'
         ];
     }
 }
